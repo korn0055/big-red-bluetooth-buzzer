@@ -1,12 +1,9 @@
-# SPDX-FileCopyrightText: 2022 Dan Halbert for Adafruit Industries
-#
-# SPDX-License-Identifier: MIT
-
 import asyncio
 import board
 import digitalio
 import keypad
 import neopixel
+import time
 
 pixels = neopixel.NeoPixel(board.NEOPIXEL, 10)
 
@@ -23,9 +20,15 @@ OFF = (0, 0, 0)
 # button_a_pin.switch_to_input(pull=digitalio.Pull.DOWN)
 # button_a = Debouncer(button_a_pin)
 
+MULTI_PRESS_TIMEOUT = 0.5 # 
+LONGPRESS_THRESHOLD = 2 #
+
 class Signals:
     def __init__(self):
         self.button_a_state = False
+        self.button_a_timestamp = time.monotonic()
+        self.button_a_multipress_count = 0
+        self.button_a_longpress_detected = False
 
 async def catch_pin_transitions(pin, signals : Signals):
     """Print a message when pin goes low and when it goes high."""
@@ -35,19 +38,23 @@ async def catch_pin_transitions(pin, signals : Signals):
             event = keys.events.get()
             if event:
                 if event.pressed:
-                    print("pin went low")
+                    unpressed_duration = time.monotonic() - signals.button_a_timestamp
                     signals.button_a_state = True
+                    signals.button_a_timestamp = time.monotonic()
+                    signals.button_a_longpress_detected = False
+                    if unpressed_duration < MULTI_PRESS_TIMEOUT:
+                        signals.button_a_multipress_count += 1
+                    else:
+                        signals.button_a_multipress_count = 0
+                    print(f"button pressed after {unpressed_duration} seconds (multi press count = {signals.button_a_multipress_count})")
                 elif event.released:
-                    print("pin went high")
+                    pressed_duration = time.monotonic() - signals.button_a_timestamp
                     signals.button_a_state = False
+                    signals.button_a_timestamp = time.monotonic()
+                    signals.button_a_longpress_detected = pressed_duration > LONGPRESS_THRESHOLD
+                    print(f"button release after {pressed_duration} seconds (long press = {signals.button_a_longpress_detected})")
+                        
             await asyncio.sleep(0)
-
-# async def blink_red_led(interval, count):
-#     for _ in range(count):
-#         cp.red_led = True
-#         await asyncio.sleep(interval)  # Don't forget the "await"!
-#         cp.red_led = False
-#         await asyncio.sleep(interval)  # Don't forget the "await"!
 
 async def blink_pixel(index, interval, count):
     for _ in range(count):
