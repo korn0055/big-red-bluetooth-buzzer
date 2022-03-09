@@ -16,7 +16,7 @@ from adafruit_led_animation.animation.pulse import Pulse
 # from adafruit_led_animation.animation.sparkle import Sparkle
 # from adafruit_led_animation.animation.sparklepulse import SparklePulse
 from adafruit_led_animation.animation.colorcycle import ColorCycle
-from adafruit_led_animation.color import PURPLE, JADE, AMBER, RED, GREEN, WHITE
+from adafruit_led_animation.color import PURPLE, JADE, AMBER, RED, GREEN, WHITE, BLUE
 import ble_comms
 
 _TICKS_PERIOD = const(1<<29)
@@ -139,17 +139,18 @@ async def animate_async(animation_obj, duration=0):
         await asyncio.sleep(0)
 
 class Controller():
-    def __init__(self, ble):
+    def __init__(self):
+        self.ble = ble_comms.BleComms(self.handle_ble_connection_changed)
+        self.ble_task = self.ble.run_async()
         self.pixels_task = None
+        self.is_ble_connected = False
+        self.prev_state = (None, None)
         self.reset()
-        self.ble = ble
 
     def reset(self):
         print("controller reset")
         self.latch_state = False
-        self.update_animation(Solid(pixels, color=PURPLE), brightness=0.1)
-#         self.leds_task = asyncio.create_task(animate_async(Pulse(pixels, speed=0.05, color=WHITE, period=1)))
-#         self.leds_task = asyncio.create_task(animate_async(ColorCycle(pixels, speed=0.5, colors=(RED, GREEN))))
+        self.refresh_state()
 
     #circuitpython asyncio does not support queues :-(
     def put(self, event):
@@ -181,29 +182,48 @@ class Controller():
             self.reset()
         else:
             self.ble.send_button_press()
-            self.update_animation(Pulse(pixels, speed=0.05, color=WHITE, period=1), brightness=1.0)
-#             self.update_animation(None)
             self.latch_state = True
+        refresh_state()
 
     def handle_button_released(self, event):
         pass
 
+    def handle_ble_connection_changed(self, is_connected):
+        self.is_ble_connected = is_connected
+        self.refresh_state()
+
+    def refresh_state(self, force_update=False):
+        state = (self.latch_state, self.is_ble_connected)
+        if state == self.prev_state and not force_update:
+            pass
+        elif state == (False, False):
+            self.update_animation(Solid(pixels, color=PURPLE), brightness=0.1)
+        elif state == (True, False):
+            self.update_animation(Pulse(pixels, speed=0.05, color=WHITE, period=1), brightness=1.0)
+#             self.leds_task = asyncio.create_task(animate_async(Pulse(pixels, speed=0.05, color=WHITE, period=1)))
+#             self.leds_task = asyncio.create_task(animate_async(ColorCycle(pixels, speed=0.5, colors=(RED, GREEN))))
+        elif state == (False, True):
+            self.update_animation(Solid(pixels, color=BLUE), brightness=0.1)
+        elif state == (True, True):
+            self.update_animation(Pulse(pixels, speed=0.05, color=WHITE, period=1), brightness=1.0)
+        prev_state = state
+
     async def run(self):
-        await self.pixels_task
+        await asyncio.gather(self.pixels_task, self.ble_task)
         # blink = Blink(pixels, speed=0.5, color=RED)
 #         self.leds_task = asyncio.create_task(animate_async(blink, 3))
 #         await asyncio.gather(self.blink_task)
 
 async def main():
-    ble = ble_comms.BleComms()
+
     signals = Signals()
-    controller = Controller(ble)
+    controller = Controller()
     led1_task = asyncio.create_task(blink_led(board.D13, .25, 100, signals))
     keypad_task = asyncio.create_task(catch_pin_transitions(board.TX, signals, controller))
     controller_task = asyncio.create_task(controller.run())
-    ble_comms_task = ble.run_async()
 
-    await asyncio.gather(led1_task, keypad_task, controller_task, ble_comms_task)  # Don't forget "await"!
+
+    await asyncio.gather(led1_task, keypad_task, controller_task)  # Don't forget "await"!
     print("done")
 
 asyncio.run(main())
