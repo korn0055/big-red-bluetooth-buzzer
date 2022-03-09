@@ -183,7 +183,7 @@ class Controller():
         else:
             self.ble.send_button_press()
             self.latch_state = True
-        refresh_state()
+            self.refresh_state()
 
     def handle_button_released(self, event):
         pass
@@ -195,7 +195,7 @@ class Controller():
     def refresh_state(self, force_update=False):
         state = (self.latch_state, self.is_ble_connected)
         if state == self.prev_state and not force_update:
-            pass
+            print("no change")
         elif state == (False, False):
             self.update_animation(Solid(pixels, color=PURPLE), brightness=0.1)
         elif state == (True, False):
