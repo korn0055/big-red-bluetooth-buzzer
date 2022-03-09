@@ -1,22 +1,16 @@
 import asyncio
-
 from bleak import BleakClient
 
-temperatureUUID = "45366e80-cf3a-11e1-9ab4-0002a5d5c51b"
-ecgUUID = "46366e80-cf3a-11e1-9ab4-0002a5d5c51b"
-
-# notify_uuid = "0000{0:x}-0000-1000-8000-00805f9b34fb".format(0xFFE1)
 
 UART_SERVICE_UUID = "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
 UART_RX_CHAR_UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 UART_TX_CHAR_UUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
 
-notify_uuid = UART_TX_CHAR_UUID
 
+notify_uuid = UART_TX_CHAR_UUID
 
 def callback(sender, data):
     print(sender, data)
-
 
 async def connect_to_device(address):
     print("starting", address, "loop")
