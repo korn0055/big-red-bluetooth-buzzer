@@ -288,6 +288,7 @@ dependencies:
     - flaky==3.6.1
     - gitdb2==2.0.6
     - gitpython==3.0.5
+    - playsound==1.2.2
     - pyftdi==0.51.2
     - pynrfjprog==10.5.0
     - pyserial==3.4
