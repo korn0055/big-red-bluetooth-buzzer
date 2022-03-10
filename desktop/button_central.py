@@ -8,6 +8,7 @@ UART_RX_CHAR_UUID = "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 UART_TX_CHAR_UUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E"
 
 notify_uuid = UART_TX_CHAR_UUID
+SIGNAL_SHUTDOWN = False
 
 class Button():
     def __init__(self, address, controller):
@@ -15,6 +16,11 @@ class Button():
         self.client = BleakClient(address)
         self.controller = controller
         self.rank = None
+        self.client.set_disconnected_callback(self.disconnect_callback)
+
+    def disconnect_callback(self, client):
+        print(f"client={client} disconnected")
+        assert client is self.client
 
     async def callback(self, sender, data):
         print(f"client={self.client}, data={data}")
@@ -29,19 +35,22 @@ class Button():
 
     async def connect_to_device(self):
         print("starting", self.address, "loop")
-        # async with BleakClient(self.address, timeout=5.0) as self.client:
         try:
             await self.client.connect()
             print("connected to", self.address)
             await self.client.start_notify(notify_uuid, self.callback)
-            await asyncio.sleep(10.0)
-            await self.client.stop_notify(notify_uuid)
+            # await asyncio.sleep(10.0)
+            # await self.client.stop_notify(notify_uuid)
         except Exception as e:
             print(e)
-        finally:
             await self.client.disconnect()
-            print("disconnected from", self.address)
 
+    async def auto_reconnect(self):
+        global SIGNAL_SHUTDOWN
+        while not SIGNAL_SHUTDOWN:
+            if not self.client.is_connected:
+                await self.connect_to_device()
+            await asyncio.sleep(0)
 class CentralController:
     def __init__(self, addresses) -> None:
         self.buttons = [Button(address, controller=self) for address in addresses]
@@ -59,8 +68,12 @@ class CentralController:
 
         await button.write(f"RANK{button.rank}".encode('ascii'))
 
+    async def shutdown(self):
+        for b in self.buttons:
+            await b.client.disconnect()
+
     async def run(self):
-        return await asyncio.gather(*(button.connect_to_device() for button in self.buttons))
+        return await asyncio.gather(*(button.auto_reconnect() for button in self.buttons))
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
@@ -81,6 +94,11 @@ if __name__ == "__main__":
         asyncio.run(controller.run())
     except KeyboardInterrupt:
         print("Process interrupted")
+        SIGNAL_SHUTDOWN = True
+        # tasks = [t for t in asyncio.all_tasks() if t is not
+        #     asyncio.current_task()]
+        # [task.cancel() for task in tasks]
+        print("tasks cancelled")
     finally:
         loop.close()
         print("loop closed")
