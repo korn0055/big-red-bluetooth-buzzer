@@ -140,7 +140,7 @@ async def animate_async(animation_obj, duration=0):
 
 class Controller():
     def __init__(self):
-        self.ble = ble_comms.BleComms(self.handle_ble_connection_changed)
+        self.ble = ble_comms.BleComms(self.handle_ble_connection_changed, self.handle_ble_rx)
         self.ble_task = self.ble.run_async()
         self.pixels_task = None
         self.is_ble_connected = False
@@ -150,6 +150,7 @@ class Controller():
     def reset(self):
         print("controller reset")
         self.latch_state = False
+        self.rank = None
         self.refresh_state()
 
     #circuitpython asyncio does not support queues :-(
@@ -192,20 +193,29 @@ class Controller():
         self.is_ble_connected = is_connected
         self.refresh_state()
 
+    def handle_ble_rx(self, rx_bytes):
+        print(f"rx_bytes={rx_bytes} (len={len(rx_bytes)})")
+        rx_str = rx_bytes.decode('ascii')
+        if 'RANK' in rx_str:
+            self.rank = int(rx_str[4])
+            print(f"assigned rank {self.rank}")
+            self.refresh_state()
+
     def refresh_state(self, force_update=False):
         state = (self.latch_state, self.is_ble_connected)
         if state == self.prev_state and not force_update:
             print("no change")
         elif state == (False, False):
             self.update_animation(Solid(pixels, color=PURPLE), brightness=0.1)
-        elif state == (True, False):
-            self.update_animation(Pulse(pixels, speed=0.05, color=WHITE, period=1), brightness=1.0)
+        elif state == (True, False) or state == (True, True):
+            if self.rank:
+                self.update_animation(Pulse(pixels, speed=0.05, color=WHITE, period=self.rank), brightness=1.0)
+            else:
+                self.update_animation(Solid(pixels, color=WHITE), brightness=1.0)
 #             self.leds_task = asyncio.create_task(animate_async(Pulse(pixels, speed=0.05, color=WHITE, period=1)))
 #             self.leds_task = asyncio.create_task(animate_async(ColorCycle(pixels, speed=0.5, colors=(RED, GREEN))))
         elif state == (False, True):
             self.update_animation(Solid(pixels, color=BLUE), brightness=0.1)
-        elif state == (True, True):
-            self.update_animation(Pulse(pixels, speed=0.05, color=WHITE, period=1), brightness=1.0)
         prev_state = state
 
     async def run(self):

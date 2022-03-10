@@ -6,11 +6,12 @@ import asyncio
 
 
 class BleComms:
-    def __init__(self, connection_status_callback=None):
+    def __init__(self, connection_status_callback=None, rx_callback=None):
         self.ble = BLERadio()
         self.uart = UARTService()
         self.advertisement = ProvideServicesAdvertisement(self.uart)
         self.connection_status_callback = connection_status_callback
+        self.rx_callback = rx_callback
 
     async def connection_loop(self):
         while True:
@@ -37,13 +38,14 @@ class BleComms:
             bytes_available = self.uart.in_waiting
             if self.ble.connected and bytes_available > 0:
                 rx_bytes = self.uart.read(bytes_available)
-                print(f"rx_bytes={rx_bytes} (len={len(rx_bytes)})")
+                if self.rx_callback:
+                    self.rx_callback(rx_bytes)
             await asyncio.sleep(0)
 
     async def run_async(self):
         connection_task = asyncio.create_task(self.connection_loop())
         rx_task = asyncio.create_task(self.rx_loop())
-        await asyncio.gather(connection_task, rx_loop)
+        await asyncio.gather(connection_task, rx_task)
 
 
 
