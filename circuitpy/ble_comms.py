@@ -12,7 +12,7 @@ class BleComms:
         self.advertisement = ProvideServicesAdvertisement(self.uart)
         self.connection_status_callback = connection_status_callback
 
-    async def run_async(self):
+    async def connection_loop(self):
         while True:
             self.ble.start_advertising(self.advertisement)
             print(f"Waiting to connect {_bleio.adapter.address}")
@@ -23,9 +23,29 @@ class BleComms:
             print("Connected")
             if self.connection_status_callback:
                 self.connection_status_callback(True)
+
+            i = 0
             while self.ble.connected:
-                self.uart.write("hello")
+                msg = f"hello {i}"
+                self.uart.write(msg)
+                print(f"{msg} sent")
                 await asyncio.sleep(1)
+                i += 1
+
+    async def rx_loop(self):
+        while True:
+            bytes_available = self.uart.in_waiting
+            if self.ble.connected and bytes_available > 0:
+                rx_bytes = self.uart.read(bytes_available)
+                print(f"rx_bytes={rx_bytes} (len={len(rx_bytes)})")
+            await asyncio.sleep(0)
+
+    async def run_async(self):
+        connection_task = asyncio.create_task(self.connection_loop())
+        rx_task = asyncio.create_task(self.rx_loop())
+        await asyncio.gather(connection_task, rx_loop)
+
+
 
     def send_button_press(self):
         if self.ble.connected:
