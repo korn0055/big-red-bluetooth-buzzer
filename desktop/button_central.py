@@ -1,4 +1,5 @@
 import asyncio
+from http import client
 from bleak import BleakClient
 import audio
 
@@ -11,7 +12,7 @@ notify_uuid = UART_TX_CHAR_UUID
 class Button():
     def __init__(self, address, controller):
         self.address = address
-        self.client = None
+        self.client = BleakClient(address)
         self.controller = controller
         self.rank = None
 
@@ -28,15 +29,18 @@ class Button():
 
     async def connect_to_device(self):
         print("starting", self.address, "loop")
-        async with BleakClient(self.address, timeout=5.0) as self.client:
-            print("connect to", self.address)
-            try:
-                await self.client.start_notify(notify_uuid, self.callback)
-                await asyncio.sleep(10.0)
-                await self.client.stop_notify(notify_uuid)
-            except Exception as e:
-                print(e)
-        print("disconnect from", self.address)
+        # async with BleakClient(self.address, timeout=5.0) as self.client:
+        try:
+            await self.client.connect()
+            print("connected to", self.address)
+            await self.client.start_notify(notify_uuid, self.callback)
+            await asyncio.sleep(10.0)
+            await self.client.stop_notify(notify_uuid)
+        except Exception as e:
+            print(e)
+        finally:
+            await self.client.disconnect()
+            print("disconnected from", self.address)
 
 class CentralController:
     def __init__(self, addresses) -> None:
@@ -59,16 +63,24 @@ class CentralController:
         return await asyncio.gather(*(button.connect_to_device() for button in self.buttons))
 
 if __name__ == "__main__":
-    one = "C2:BD:72:AF:F5:2C"
-    two = "E3:55:A0:1B:BB:0B"
-    three = "d7:10:63:77:a5:d0"
-    four = "c2:df:0c:e4:c0:6c"
-    controller = CentralController(
-            [
-                # one,
-                two,
-                # three,
-                # four
-            ]
-        )
-    asyncio.run(controller.run())
+    loop = asyncio.get_event_loop()
+
+    try:
+        one = "C2:BD:72:AF:F5:2C"
+        two = "E3:55:A0:1B:BB:0B"
+        three = "d7:10:63:77:a5:d0"
+        four = "c2:df:0c:e4:c0:6c"
+        controller = CentralController(
+                [
+                    one,
+                    two,
+                    three,
+                    four
+                ]
+            )
+        asyncio.run(controller.run())
+    except KeyboardInterrupt:
+        print("Process interrupted")
+    finally:
+        loop.close()
+        print("loop closed")
