@@ -24,10 +24,13 @@ class Button():
 
     async def callback(self, sender, data):
         print(f"client={self.client}, data={data}")
-        if b'boom' in data:
+        ascii_data = data.decode('ascii')
+        if 'BOOM' in ascii_data:
             await audio.play_voice_clip()
             self.pressed = True
             await self.controller.report_press(self)
+        elif 'RESET' in ascii_data:
+            await self.controller.report_reset(self)
 
     async def write(self, data_bytes):
         if self.client is not None:
@@ -67,6 +70,11 @@ class CentralController:
             self.current_rank += 1
 
         await button.write(f"RANK{button.rank}".encode('ascii'))
+
+    async def report_reset(self, button):
+        self.reset_ranking()
+        for b in self.buttons:
+            await b.write("RESET".encode('ascii'))
 
     async def shutdown(self):
         for b in self.buttons:

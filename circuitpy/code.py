@@ -132,7 +132,7 @@ async def blink_led(pin, interval, count, signals):
             await asyncio.sleep(interval*mult)  # Don't forget the "await"!
 
 async def animate_async(animation_obj, duration=0):
-    print(f"start {duration} second animiation")
+#     print(f"start {duration} second animiation")
     end_time = time.monotonic() + duration
     while True if duration == 0 else time.monotonic() < end_time:
         animation_obj.animate()
@@ -157,49 +157,59 @@ class Controller():
     def put(self, event):
         print(f"event received:{type(event)}")
         if isinstance(event, ButtonPressedEvent):
-            print("hello")
             self.handle_button_pressed(event)
+        elif isinstance(event, ButtonHoldEvent):
+            self.handle_button_hold(event)
+        elif isinstance(event, ButtonMultiPressEvent):
+            self.handle_button_multi_press(event)
 
     def update_animation(self, animation_obj, *, brightness=None, duration=0):
         print(f"update animation")
         if self.pixels_task:
-            print("cancelling")
+#             print("cancelling")
             self.pixels_task.cancel()
 
         if brightness:
-            print("brightness update")
+#             print("brightness update")
             pixels.brightness = brightness
 
         if animation_obj:
-            print("new task")
+#             print("new task")
             self.pixels_task = asyncio.create_task(animate_async(animation_obj, duration=duration))
         else:
-            print("off")
+#             print("off")
             pixels.fill((0, 0, 0))
             pixels.show()
 
     def handle_button_pressed(self, event):
-        if self.latch_state:
-            self.reset()
-        else:
-            self.ble.send_button_press()
+        self.ble.tx('BOOM')
+        if not self.latch_state:
             self.latch_state = True
             self.refresh_state()
 
+    def handle_button_hold(self, event):
+        self.ble.tx('RESET')
+#         self.update_animation(Comet(pixels, speed=0.05, color=JADE, tail_length=3), brightness=1.0, duration=3.0)
+        self.reset()
+
     def handle_button_released(self, event):
+        pass
+
+    def handle_button_multi_press(self, event):
         pass
 
     def handle_ble_connection_changed(self, is_connected):
         self.is_ble_connected = is_connected
         self.refresh_state()
 
-    def handle_ble_rx(self, rx_bytes):
-        print(f"rx_bytes={rx_bytes} (len={len(rx_bytes)})")
-        rx_str = rx_bytes.decode('ascii')
+    def handle_ble_rx(self, rx_str):
+        print(f"rx_str={rx_str} (len={len(rx_str)})")
         if 'RANK' in rx_str:
             self.rank = int(rx_str[4])
             print(f"assigned rank {self.rank}")
             self.refresh_state()
+        elif 'RESET' in rx_str:
+            self.reset()
 
     def refresh_state(self, force_update=False):
         state = (self.latch_state, self.is_ble_connected)
@@ -211,7 +221,8 @@ class Controller():
             if self.rank:
                 self.update_animation(Pulse(pixels, speed=0.05, color=WHITE, period=self.rank), brightness=1.0)
             else:
-                self.update_animation(Solid(pixels, color=WHITE), brightness=1.0)
+                self.update_animation(Pulse(pixels, speed=0.05, color=AMBER, period=1), brightness=1.0)
+#                 self.update_animation(Solid(pixels, color=WHITE), brightness=1.0)
 #             self.leds_task = asyncio.create_task(animate_async(Pulse(pixels, speed=0.05, color=WHITE, period=1)))
 #             self.leds_task = asyncio.create_task(animate_async(ColorCycle(pixels, speed=0.5, colors=(RED, GREEN))))
         elif state == (False, True):

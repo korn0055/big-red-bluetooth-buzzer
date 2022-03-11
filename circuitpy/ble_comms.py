@@ -30,7 +30,7 @@ class BleComms:
                 msg = f"hello {i}"
                 self.uart.write(msg)
                 print(f"{msg} sent")
-                await asyncio.sleep(1)
+                await asyncio.sleep(10)
                 i += 1
 
     async def rx_loop(self):
@@ -39,7 +39,7 @@ class BleComms:
             if self.ble.connected and bytes_available > 0:
                 rx_bytes = self.uart.read(bytes_available)
                 if self.rx_callback:
-                    self.rx_callback(rx_bytes)
+                    self.rx_callback(rx_bytes.decode('ascii'))
             await asyncio.sleep(0)
 
     async def run_async(self):
@@ -47,9 +47,6 @@ class BleComms:
         rx_task = asyncio.create_task(self.rx_loop())
         await asyncio.gather(connection_task, rx_task)
 
-
-
-    def send_button_press(self):
+    def tx(self, data_bytes):
         if self.ble.connected:
-            self.uart.write("boom")
-            print("ble 'boom'")
+            self.uart.write(data_bytes.encode('ascii'))
