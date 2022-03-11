@@ -44,7 +44,7 @@ pixels = neopixel.NeoPixel(board.NEOPIXEL, 10, brightness=1.0, auto_write=False)
 # button_a = Debouncer(button_a_pin)
 
 MULTI_PRESS_TIMEOUT_MS = 500 #
-LONGPRESS_THRESHOLD_MS = 2000 #
+LONGPRESS_THRESHOLD_MS = 5000 #
 
 class Signals:
     def __init__(self):
@@ -83,7 +83,7 @@ async def catch_pin_transitions(pin, signals : Signals, event_queue):
             if event:
                 if event.pressed:
                     signals.button_a_state = True
-                    signals.button_a_timestamp = event.timestamp
+                    signals.button_a_press_timestamp = event.timestamp
                     signals.button_a_longpress_detected = False
 
                     unpressed_duration = event.timestamp - (prev_event.timestamp if prev_event else supervisor.ticks_ms())
@@ -99,9 +99,8 @@ async def catch_pin_transitions(pin, signals : Signals, event_queue):
                     event_queue.put(ButtonPressedEvent())
 
                 elif event.released:
-                    pressed_duration = event.timestamp - signals.button_a_timestamp
+                    pressed_duration = event.timestamp - signals.button_a_press_timestamp
                     signals.button_a_state = False
-                    signals.button_a_timestamp = event.timestamp
                     event_queue.put(ButtonReleasedEvent())
                     hold_start_ticks = None
                     print(f"button released after {pressed_duration} ms (long press = {signals.button_a_longpress_detected})")
