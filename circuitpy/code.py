@@ -228,7 +228,7 @@ class Controller():
             self.update_animation(Solid(pixels, color=BLUE), brightness=0.1)
         prev_state = state
 
-    async def run(self);
+    async def run(self):
         # not sure if awaiting pixels_tasks works here since the underlying object is changed during execution
         await asyncio.gather(self.pixels_task, self.ble_task)
         # blink = Blink(pixels, speed=0.5, color=RED)
