@@ -218,7 +218,7 @@ class Controller():
             self.update_animation(Solid(pixels, color=PURPLE), brightness=0.1)
         elif state == (True, False) or state == (True, True):
             if self.rank:
-                self.update_animation(Pulse(pixels, speed=0.05, color=WHITE, period=self.rank), brightness=1.0)
+                self.update_animation(Pulse(pixels, speed=0.05, color=WHITE, period=0.5*self.rank), brightness=1.0)
             else:
                 self.update_animation(Pulse(pixels, speed=0.05, color=AMBER, period=1), brightness=1.0)
 #                 self.update_animation(Solid(pixels, color=WHITE), brightness=1.0)
