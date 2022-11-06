@@ -5,7 +5,6 @@ import time
 
 
 async def play_voice_clip():
-    # audio_file = os.path.dirname(__file__) + 'voicechair.mp3'
     audio_file = 'voicechair-trimmed.mp3'
     print("playing...")
     playsound(audio_file, block=False)

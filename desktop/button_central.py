@@ -87,6 +87,9 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
 
     try:
+        ### Hardcoded MAC address for each bluefruit device.  Update accordingly. ###
+        ### This may be too many simultaneous connections for some BLE adapters.  If you run into issues, try connecting to just one and then adding from there.
+        ### Disconnecting other BLE devices might also help.
         one = "C2:BD:72:AF:F5:2C"
         two = "E3:55:A0:1B:BB:0B"
         three = "d7:10:63:77:a5:d0"
