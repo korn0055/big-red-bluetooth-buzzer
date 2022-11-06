@@ -5,7 +5,7 @@ Find the full story including build instructions in my [blog post](https://spuri
 # Overview
 This repo contains code both for the Adafruit Circuit Playground Bluefruit inside each buzzer, as well as the the application that runs on the PC which communicates with all of the buzzers and plays the sound effects.
 
-
+![overview](https://github.com/korn0055/big-red-bluetooth-buzzer/blob/main/docs/diagram/overview.png?raw=true)
 
 ## Folders
 `desktop` python scripts that run on the PC\
