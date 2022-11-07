@@ -12,14 +12,32 @@ This repo contains code both for the Adafruit Circuit Playground Bluefruit insid
 `circuitpy` circuitpython that runs on the Bluefruit\
 `docs` documentation artifacts
 
+## Ciruit Playground Bluefruit 
+### Setup
+1. Follow [these steps to install CircuitPython on each Bluefruit board.](https://learn.adafruit.com/adafruit-circuit-playground-bluefruit/circuitpython)
+After that's done, the device should show up as Mass Storage Device called `CIRCUITPY` when you plug it into your PC.\
+1. Copy the contents of `circuitpy/lib` to `CIRCUITPY/lib`
+1. From the `circuitpy` folder in this repo, copy `ble_comms.py` and `code.py` to the bluefruit's root.
+1. Disconnect the USB and power batteries.
+### LED Colors
+| ------------- | ------------- |
+| Content Cell  | Content Cell  |
+| Content Cell  | Content Cell  |
+
+
 ## PC Software
 
 ### Dependencies
+#### Conda Virtual Environment
+Import a new [conda](https://anaconda.org/anaconda/conda) environment from the `desktop` folder\
+`conda env create -n ENVNAME --file adafruit.yml` 
 
 ### Configuring
 
+
+
 ### Running
 
-## Ciruit Playground Bluefruit 
 
-### Setup
+
+
