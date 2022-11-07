@@ -17,7 +17,7 @@ A PC communicates with all of the buzzers over bluetooth, keeps track what order
 - Hitting Ctrl-C will (hopefully gracefully) end the script and disconnect the buzzers
 
 ## Buzzer Lights Decoder Ring
-| Color | Bluetooth | Button pressed?
+| Color | Bluetooth | Player buzzed in?
 | ------------- | ------------- | ---------|
 | solid purple  | disconnected  | no |
 | solid blue | connected | no |
@@ -29,12 +29,12 @@ See [this](https://learn.adafruit.com/welcome-to-circuitpython/troubleshooting#c
 
 ## Folders
 `desktop` python scripts that run on the PC\
-`circuitpy` circuitpython that runs on the Bluefruit\
+`circuitpy` CircuitPython that runs on the Bluefruit\
 `docs` documentation artifacts
 
 # Setup
 
-## Ciruit Playground Bluefruit (circuitpython)
+## Ciruit Playground Bluefruit (CircuitPython)
 1. Follow [these steps to install CircuitPython on each Bluefruit board.](https://learn.adafruit.com/adafruit-circuit-playground-bluefruit/circuitpython)
 After that's done, the device should show up as a Mass Storage Device called `CIRCUITPY` when you plug it into your PC.
 1. Copy the contents of the `circuitpy/lib` folder in this repo to the `CIRCUITPY/lib` folder on the bluefruit.
@@ -42,16 +42,16 @@ After that's done, the device should show up as a Mass Storage Device called `CI
 1. Open a [Serial Console](https://learn.adafruit.com/welcome-to-circuitpython/kattni-connecting-to-the-serial-console) and note the BLE MAC address in this message:  `Waiting to connect <Address c2:bd:72:af:f5:2c>` 
 1. Disconnect the USB and supply power using a battery.  The LEDs on the Bluefruit should be solid amber or blue, depending if there's a bluetooth connection.
 
-## PC Software (python)
+## PC (python)
 
 The python script uses [bleak](https://github.com/hbldh/bleak) to manage the bluetooth connections.  I believe it's the only package you'll need to install, but haven't verified this with a fresh install.  If you try it, let me know what you find out!
 
 #### Conda Virtual Environment
-There is an export of the Anaconda virtual environment I was using.  It probably includes a lot of extra stuff that you don't actually needed for this to run. But if you want, you can import with [conda](https://anaconda.org/anaconda/conda) like this:
+There is an export of the Anaconda virtual environment I was using.  It probably includes a lot of extra stuff that you don't actually needed for this to run. But if you want, you can import with [conda](https://anaconda.org/anaconda/conda) like this:\
 `conda env create -n ENVNAME --file adafruit.yml` 
 
 ### Configuration
-Before the buzzers can connect, the hardcoded MAC addresses for the Bluefruit boards must set in.\
+Before the buzzers can connect, the hardcoded MAC addresses for the Bluefruit boards must set.\
 Update these lines in `desktop/button_central.py` with the MAC address of your bluefruit devices (see earlier section for how to get MAC address):
 ```
         one = "C2:BD:72:AF:F5:2C"
