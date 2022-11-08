@@ -34,7 +34,7 @@ See [this](https://learn.adafruit.com/welcome-to-circuitpython/troubleshooting#c
 
 # Setup
 
-## Ciruit Playground Bluefruit (CircuitPython)
+## Circuit Playground Bluefruit (CircuitPython)
 1. Follow [these steps to install CircuitPython on each Bluefruit board.](https://learn.adafruit.com/adafruit-circuit-playground-bluefruit/circuitpython)
 After that's done, the device should show up as a Mass Storage Device called `CIRCUITPY` when you plug it into your PC.
 1. Copy the contents of the `circuitpy/lib` folder in this repo to the `CIRCUITPY/lib` folder on the bluefruit.
