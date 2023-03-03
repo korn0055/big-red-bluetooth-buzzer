@@ -14,6 +14,7 @@ from adafruit_led_animation.animation.pulse import Pulse
 from adafruit_led_animation.animation.colorcycle import ColorCycle
 from adafruit_led_animation.color import PURPLE, JADE, AMBER, RED, GREEN, WHITE, BLUE
 import ble_comms
+import microcontroller
 
 _TICKS_PERIOD = const(1<<29)
 _TICKS_MAX = const(_TICKS_PERIOD-1)
@@ -191,7 +192,10 @@ class Controller():
         pass
 
     def handle_button_multi_press(self, event):
-        pass
+        print(f"MULTI BUTTON PRESS HANDLER count={event.count}")
+        if event.count == 10:
+            print("!!RESETTING DEVICE!!")
+            microcontroller.reset()
 
     def handle_ble_connection_changed(self, is_connected):
         self.is_ble_connected = is_connected

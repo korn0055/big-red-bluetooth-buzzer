@@ -27,11 +27,15 @@ class BleComms:
 
             i = 0
             while self.ble.connected:
-                msg = f"hello {i}"
-                self.uart.write(msg)
-                print(f"{msg} sent")
-                await asyncio.sleep(10)
+                LOOP_INTERVAL = 0.01
+                REPORT_INTERVAL = 1
+                if i % (REPORT_INTERVAL // LOOP_INTERVAL) == 0:
+                    msg = f"hello {i}"
+                    self.uart.write(msg)
+                    print(f"{msg} sent")
+                await asyncio.sleep(LOOP_INTERVAL)
                 i += 1
+            print("disconnected")
 
     async def rx_loop(self):
         while True:
